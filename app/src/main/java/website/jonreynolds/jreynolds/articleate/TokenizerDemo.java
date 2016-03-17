@@ -1,4 +1,4 @@
-package TextRank;
+package website.jonreynolds.jreynolds.articleate;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.IOException;
