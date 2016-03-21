@@ -14,11 +14,12 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
 
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,11 +40,12 @@ public class ArticleActivity extends AppCompatActivity {
     private void summarizeArticle(){
         TextView textView = (TextView)findViewById(R.id.key_sentence);
         if(articleText != null && articleText!= ""){
-            ArrayList<String> rankedSentences = tr.sentenceExtraction(articleText);
-            textView.setText(rankedSentences.get(0));
+            ArrayList<TextRank.SentenceVertex> rankedSentences = tr.sentenceExtraction(articleText);
+            String summary = rankedSentences.get(0).getSentence();
+            textView.setText(summary);
         }
         else{
-            textView.setText("There was an error processing your request.");
+            textView.setText("Unable to process this article");
         }
     }
 
@@ -68,11 +70,19 @@ public class ArticleActivity extends AppCompatActivity {
             url = "http://"+url;
         }
         webview = (WebView)findViewById(R.id.webView);
-        webview.setWebViewClient(new WebViewClient());
+        webview.setWebViewClient(new WebViewClient(){
+
+            @Override
+            /**
+             * Run AsyncTask to fetch page with JSoup
+             */
+            public void onPageFinished(WebView view, String url) {
+                FetchPageTask fetch = new FetchPageTask();
+                fetch.execute(url);
+            }
+
+        });
         webview.loadUrl(url);
-        //JSoup Async Task
-        FetchPageTask fetch = new FetchPageTask();
-        fetch.execute(url);
     }
 
     @Override
@@ -82,15 +92,17 @@ public class ArticleActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         //Open raw resources to initialize OpenNLP tools for TextRank
         if(tr==null){
             InputStream sent = getResources().openRawResource(R.raw.en_sent);

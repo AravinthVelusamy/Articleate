@@ -30,4 +30,5 @@ dependencies {
     compile 'org.jgrapht:jgrapht-core:0.9.1'
     compile 'org.apache.opennlp:opennlp:1.6.0'
     compile 'org.apache.opennlp:opennlp-tools:1.6.0'
+    compile 'com.sothree.slidinguppanel:library:3.3.0'
 }

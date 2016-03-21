@@ -58,7 +58,6 @@ public class TextRank {
         BufferedReader br = new BufferedReader(new InputStreamReader(stop));
         String line;
         while ((line = br.readLine()) != null) {
-            Log.v("TextRank", line);
             stopwords.add(line);
         }
     }
@@ -72,7 +71,7 @@ public class TextRank {
         String[] sentences = sdetector.sentDetect(article);
         //Initialize graph with a vertex for each sentence
         for(String sentence: sentences){
-            SentenceVertex sv = new SentenceVertex(sentence);
+            SentenceVertex sv = new SentenceVertex(sentence, tokenizer.tokenize(sentence));
             graph.addVertex(sv);
         }
         //Create edges
@@ -104,7 +103,6 @@ public class TextRank {
      */
     private double calculateSimilarity(SentenceVertex v1, SentenceVertex v2){
         String[] tokens1 = v1.getTokens();
-        String[] tags1 = v1.getTags();
         String[] tokens2 = v2.getTokens();
         //Loop through tokens in first sentence
         double similarities = 0;
@@ -116,7 +114,7 @@ public class TextRank {
             for (int j = 0; j < tokens2.length; j++) {
                 String word2 = tokens2[j];
 
-                if(word1.equals(word2) && !stopwords.contains(word1)){
+                if(word1.equals(word2) && !stopwords.contains(word1.toLowerCase())){
                     similarities += 1;
                 }
             }
@@ -174,6 +172,7 @@ public class TextRank {
             error = error/(double)(graph.vertexSet().size());
             iterations +=1;
         }
+        Log.v("TextRank", iterations+"");
     }
 
     /**
@@ -182,18 +181,13 @@ public class TextRank {
      * @return Ordered ArrayList of sentence Strings
 
      */
-    public ArrayList<String> sentenceExtraction(String text){
+    public ArrayList<SentenceVertex> sentenceExtraction(String text){
         createGraph(text);
         convergeScores();
         ArrayList<SentenceVertex> sorted = new ArrayList<SentenceVertex>();
         sorted.addAll(graph.vertexSet());
         Collections.sort(sorted, new SentenceVertexComparator());
-        ArrayList<String> ret = new ArrayList<String>();
-        for(SentenceVertex v: sorted){
-            ret.add(v.getSentence());
-        }
-        return ret;
-
+        return sorted;
     }
 
     /**
@@ -205,26 +199,24 @@ public class TextRank {
             return Double.compare(rhs.getScore(), lhs.getScore());
         }
     }
-    
+
     /**
      * A node containing a sentence and its information, such as score, tokens, parts-of-speech, etc.
      * Created by jonathanreynolds on 3/19/16.
      */
-    private class SentenceVertex {
+    public class SentenceVertex {
 
         private String sentence;
         private String[] tokens;
-        private String[] tags;
         private double score;
 
         /**
          * Constructor for SentenceVertex. Initializes fields.
          * @param s String sentence
          */
-        public SentenceVertex(String s){
+        public SentenceVertex(String s, String[] t){
             sentence = s;
-            tokens = tokenizer.tokenize(s);
-//            tags = tagger.tag(tokens);
+            tokens = t;
             //Initialize to a random score between 1 and 10, as stated by Mihalcea in the TextRank paper
             score = new Random().nextDouble()*10.0;
         }
@@ -244,14 +236,6 @@ public class TextRank {
          */
         public String[] getTokens() {
             return tokens;
-        }
-
-        /**
-         * Returns the tags of the tokens of this sentence
-         * @return Array of POS tags
-         */
-        public String[] getTags() {
-            return tags;
         }
 
 
