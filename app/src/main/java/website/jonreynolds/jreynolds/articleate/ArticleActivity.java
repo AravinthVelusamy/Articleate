@@ -8,6 +8,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -26,14 +27,17 @@ import java.util.ArrayList;
 import textrank.TextRank;
 
 public class ArticleActivity extends AppCompatActivity {
-
+    private final String TAG = "ArticleActivity";
     private WebView webview;
     private String url;
     private String articleText;
     private static TextRank tr;
 
+    /**
+     * Run TextRank algorithms on the article
+     */
     private void summarizeArticle(){
-        TextView textView = (TextView)findViewById(R.id.textView);
+        TextView textView = (TextView)findViewById(R.id.key_sentence);
         if(articleText != null && articleText!= ""){
             ArrayList<String> rankedSentences = tr.sentenceExtraction(articleText);
             textView.setText(rankedSentences.get(0));
@@ -42,6 +46,10 @@ public class ArticleActivity extends AppCompatActivity {
             textView.setText("There was an error processing your request.");
         }
     }
+
+    /**
+     * Initialize the WebView with the url passed to the ArticleActivity
+     */
     private void initializeWebView(){
         Intent intent = getIntent();
         Uri data = intent.getData();
@@ -62,6 +70,7 @@ public class ArticleActivity extends AppCompatActivity {
         webview = (WebView)findViewById(R.id.webView);
         webview.setWebViewClient(new WebViewClient());
         webview.loadUrl(url);
+        //JSoup Async Task
         FetchPageTask fetch = new FetchPageTask();
         fetch.execute(url);
     }
@@ -82,11 +91,13 @@ public class ArticleActivity extends AppCompatActivity {
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        //Open raw resources to initialize OpenNLP tools for TextRank
         if(tr==null){
             InputStream sent = getResources().openRawResource(R.raw.en_sent);
             InputStream token = getResources().openRawResource(R.raw.en_token);
+            InputStream stop = getResources().openRawResource(R.raw.stopwords);
             try {
-                tr = new TextRank(sent, token);
+                tr = new TextRank(sent, token, stop);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -94,6 +105,9 @@ public class ArticleActivity extends AppCompatActivity {
         initializeWebView();
     }
 
+    /**
+     * An AsyncTask to fetch a page and its information with JSoup
+     */
     private class FetchPageTask extends AsyncTask<String, Void, Void> {
 
         @Override
@@ -105,18 +119,35 @@ public class ArticleActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            //Connection succeeded
             if(doc != null) {
                 html = doc.html();
                 Element article = doc.select("article").first();
+                //If there exists an article tag in the document
                 if(article!=null) {
+                    articleText = "";
                     Elements articleParagraphs = article.select("p");
-                    articleText = articleParagraphs.text();
+                    for(int i = 0; i < articleParagraphs.size(); i++){
+                        Element paragraph = articleParagraphs.get(i);
+                        //End all sentences with periods so as to ensure sentence separation
+                        //Otherwise, sentences will appear concatenated
+                        String pText = paragraph.text();
+                        if(pText.length()>0 && pText.charAt(pText.length()-1) != ' '){
+                            if(pText.charAt(pText.length()-1)== '.')
+                                pText += " ";
+                            else
+                                pText += ". ";
+                        }
+                        articleText += pText;
+                    }
+                    Log.v(TAG, articleText);
                 }
             }
             return null;
         }
 
         protected void onPostExecute(Void v) {
+            //Call summarizeArticle upon finish
             summarizeArticle();
         }
     }

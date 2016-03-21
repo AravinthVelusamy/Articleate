@@ -9,13 +9,14 @@
     android:weightSum="1"
     tools:context="website.jonreynolds.jreynolds.articleate.ArticleActivityFragment"
     tools:showIn="@layout/activity_article"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="3dp">
 
 
     <WebView
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_weight="0.3"
+        android:layout_weight="0.25"
         android:id="@+id/webView"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
@@ -23,17 +24,40 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_weight="0.7"
+        android:layout_weight="0.75"
         android:weightSum="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="12dp">
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearance"
+            android:text="Key Sentences:"
+            android:id="@+id/textView" />
+
+        <ScrollView
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_weight="0.5"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"
-            android:id="@+id/textView" />
+            android:id="@+id/scrollView" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:hint="Summarization"
+                android:id="@+id/key_sentence"
+                android:padding="5dp"
+                android:autoText="false" />
+        </ScrollView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearance"
+            android:text="Keywords:"
+            android:id="@+id/textView2" />
 
         <LinearLayout
             android:orientation="horizontal"
@@ -42,6 +66,7 @@
             android:layout_weight="0.5">
 
         </LinearLayout>
+
     </LinearLayout>
 
 </LinearLayout>

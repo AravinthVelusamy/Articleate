@@ -37,11 +37,11 @@
                   TODO: Change the host or pathPrefix as necessary.
                 -->
                 <data
-                    android:host="www.cnn.com"
+                    android:host="*.cnn.com"
                     android:pathPattern="..*/..*/..*/..*"
                     android:scheme="http" />
                 <data
-                    android:host="www.cnn.com"
+                    android:host="*.cnn.com"
                     android:pathPattern="..*/..*/..*/..*"
                     android:scheme="https" />
             </intent-filter>
