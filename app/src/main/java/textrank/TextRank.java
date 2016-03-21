@@ -1,5 +1,7 @@
 package textrank;
 
+import android.renderscript.ScriptGroup;
+
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
@@ -26,55 +28,36 @@ import opennlp.tools.tokenize.TokenizerModel;
 public class TextRank {
     private SimpleWeightedGraph<SentenceVertex, DefaultWeightedEdge> graph;
     private SentenceDetectorME sdetector;
-    private POSTaggerME tagger;
+//    private POSTaggerME tagger;
     private Tokenizer tokenizer;
     private final double convergenceThreshold = 0.0001;
     private final double probability = 0.85;
-    private static TextRank instance;
-    static {
-        try {
-            instance = new TextRank();
-        } catch (IOException e){
-        }
-    }
 
 
     /**
-     * Initialize TextRank
+     * Initialize TextRank with three inputstreams corresponsing to training information
+     * for Sentence extraction, Tokenization, and Part of Speech recognition, respectively.
      */
-    private TextRank() throws IOException {
-        init();
-    }
-
-    /**
-     * Get TextRank singleton
-     * @return the singleton TextRank instance
-     */
-    public static TextRank getInstance(){
-        return instance;
+    public TextRank(InputStream sent, InputStream token/*, InputStream pos*/) throws IOException {
+        init(sent, token/*, pos*/);
     }
 
     /**
      * Initialization method. Creates a new graph and initializes the StanfordNLPCore pipeline if needed
+     * @param sent
+     * @param token
      */
-    private void init() throws IOException {
+    private void init(InputStream sent, InputStream token /*, InputStream pos*/) throws IOException {
         // creates a new SentenceDetector, POSTagger, and Tokenizer
-        if(sdetector == null || tagger == null || tokenizer == null) {
-            System.out.println("Working Directory = " +
-                    System.getProperty("user.dir"));
-            InputStream is = new FileInputStream("app/src/main/assets/en-sent.bin");
-            SentenceModel sentModel = new SentenceModel(is);
-            is.close();
+            SentenceModel sentModel = new SentenceModel(sent);
+            sent.close();
             sdetector = new SentenceDetectorME(sentModel);
-            is = new FileInputStream("app/src/main/assets/en-pos-maxent.bin");
-            POSModel posModel = new POSModel(is);
-            is.close();
-            tagger = new POSTaggerME(posModel);
-            is = new FileInputStream("app/src/main/assets/en-token.bin");
-            TokenizerModel tokenModel = new TokenizerModel(is);
+//            POSModel posModel = new POSModel(pos);
+//            pos.close();
+//            tagger = new POSTaggerME(posModel);
+            TokenizerModel tokenModel = new TokenizerModel(token);
+            token.close();
             tokenizer = new TokenizerME(tokenModel);
-            is.close();
-        }
     }
 
     /**
@@ -127,13 +110,13 @@ public class TextRank {
         double similarities = 0;
         for (int i = 0; i < tokens1.length; i++) {
             String word1 = tokens1[i];
-            String pos1 =  tags1[i];
+//            String pos1 =  tags1[i];
 
             //Loop through tokens in second sentence
             for (int j = 0; j < tokens2.length; j++) {
                 String word2 = tokens2[j];
 
-                if(word1.equals(word2) && (pos1.indexOf("JJ")==0 || pos1.indexOf("NN")==0 || pos1.indexOf("VB")==0)){
+                if(word1.equals(word2)/* && (pos1.indexOf("JJ")==0 || pos1.indexOf("NN")==0 || pos1.indexOf("VB")==0) */){
                     similarities += 1;
 //                    System.out.println(pos1 + " " + word1);
                 }
@@ -277,13 +260,13 @@ public class TextRank {
                 "11. Amish “branding”: For many Americans, the term “Amish” has strong positive associations: honesty, simplicity, old-fashioned virtue. Businesses can partake in those associations simply by being Amish. For Riehl, there's a big difference between overt image-building and the kind of trust that accrues when Amish business owners serve their customers with integrity: The latter “is a reputation that was earned, not a brand that was bought.” \n" +
                 "12. Payroll costs: Amish employees in Amish businesses are exempt from mainstream companies’ Social Security, health insurance and pension mandates. Though that keeps costs down, the impact is often exaggerated, Amish business owners say. They say they still have to pay into Amish Aid, the community’s mutual-aid fund, and they have responsibility for payroll taxes and benefits for non-Amish employees, so the difference isn’t all that great.";
 
-        TextRank tr = TextRank.getInstance();
-        ArrayList<String> sent1 = tr.sentenceExtraction(text);
-        ArrayList<String> sent2 = tr.sentenceExtraction(text2);
-        ArrayList<String> sent3 = tr.sentenceExtraction(text3);
-        System.out.println(sent1.get(0));
-        System.out.println(sent2.get(0));
-        System.out.println(sent3.get(0));
+//        TextRank tr = TextRank.getInstance();
+//        ArrayList<String> sent1 = tr.sentenceExtraction(text);
+//        ArrayList<String> sent2 = tr.sentenceExtraction(text2);
+//        ArrayList<String> sent3 = tr.sentenceExtraction(text3);
+//        System.out.println(sent1.get(0));
+//        System.out.println(sent2.get(0));
+//        System.out.println(sent3.get(0));
     }
     /**
      * A node containing a sentence and its information, such as score, tokens, parts-of-speech, etc.
@@ -303,7 +286,7 @@ public class TextRank {
         public SentenceVertex(String s){
             sentence = s;
             tokens = tokenizer.tokenize(s);
-            tags = tagger.tag(tokens);
+//            tags = tagger.tag(tokens);
             //Initialize to a random score between 1 and 10, as stated by Mihalcea in the TextRank paper
             score = new Random().nextDouble()*10.0;
         }

@@ -1,5 +1,7 @@
 package website.jonreynolds.jreynolds.articleate;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -8,6 +10,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,6 +36,14 @@ public class MainActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
+    }
+
+    public void handleButtonClick(View view){
+        EditText urlInput = (EditText)findViewById(R.id.editText);
+        String url = urlInput.getText().toString();
+        Intent articleIntent = new Intent(this, ArticleActivity.class);
+        articleIntent.putExtra("url", url);
+        startActivity(articleIntent);
     }
 
     @Override
