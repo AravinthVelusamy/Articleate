@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">Articleate</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_article">ArticleActivity</string>
+    <string name="title_activity_article">Articleate Summarization</string>
 </resources>

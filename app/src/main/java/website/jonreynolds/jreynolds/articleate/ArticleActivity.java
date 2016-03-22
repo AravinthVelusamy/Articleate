@@ -1,6 +1,7 @@
 package website.jonreynolds.jreynolds.articleate;
 
 import android.content.Intent;
+import android.media.session.MediaSession;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -12,10 +13,11 @@ import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.sothree.slidinguppanel.SlidingUpPanelLayout;
-
+import org.apmem.tools.layouts.FlowLayout;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -38,14 +40,89 @@ public class ArticleActivity extends AppCompatActivity {
      * Run TextRank algorithms on the article
      */
     private void summarizeArticle(){
-        TextView textView = (TextView)findViewById(R.id.key_sentence);
-        if(articleText != null && articleText!= ""){
+        TextView summaryText = (TextView)findViewById(R.id.summary);
+        if(articleText != null && articleText != ""){
             ArrayList<TextRank.SentenceVertex> rankedSentences = tr.sentenceExtraction(articleText);
+            ArrayList<TextRank.TokenVertex> rankedTokens = tr.keywordExtraction(articleText);
             String summary = rankedSentences.get(0).getSentence();
-            textView.setText(summary);
+            summaryText.setText(summary);
+            populateKeywordsContainer(rankedTokens);
         }
         else{
-            textView.setText("Unable to process this article");
+            summaryText.setText("Unable to process this article");
+        }
+    }
+
+    /**
+     * Get top 8 keywords and careate buttons for them
+     */
+    private void populateKeywordsContainer(ArrayList<TextRank.TokenVertex> rankedTokens){
+        FlowLayout keywordsContainer = (FlowLayout)findViewById(R.id.keywords);
+        keywordsContainer.removeAllViews();
+        for(int i = 0; i < rankedTokens.size() && i < 8; i++){
+            TextRank.TokenVertex tv = rankedTokens.get(i);
+            TextView newButton = new Button(this);
+            newButton.setText(tv.getToken());
+            keywordsContainer.addView(newButton);
+        }
+    }
+
+    /**
+     * Perform needed information scraping with a JSoup Document
+     * @param doc JSoup document initialized on current page
+     */
+    private void jsoupAnalysis(Document doc){
+        //Connection succeeded
+        if(doc != null) {
+            //Try different methods of article retrieval
+            Element article = doc.select("main").select("article").first();
+            if(article == null)
+                article = doc.select("article").first();
+            //If there exists an article tag in the document
+            if(article!=null) {
+                createArticleText(article);
+                createAuthorText(article);
+            }
+        }
+        else {
+            TextView authorTextView = (TextView) findViewById(R.id.authors);
+            authorTextView.setText("Couldn't extract author data.");
+        }
+        summarizeArticle();
+    }
+
+    /**
+     * Preprocess and correct the article text extracted via JSoup.
+     * @param article JSoup article element
+     */
+    private void createArticleText(Element article){
+        articleText = "";
+        Elements articleParagraphs = article.select("p");
+        for(int i = 0; i < articleParagraphs.size(); i++){
+            Element paragraph = articleParagraphs.get(i);
+            //End all sentences with periods so as to ensure sentence separation
+            //Otherwise, sentences will appear concatenated
+            String pText = paragraph.text();
+            if(pText.length()>0 && pText.charAt(pText.length()-1) != ' '){
+                if(pText.charAt(pText.length()-1)== '.')
+                    pText += " ";
+                else
+                    pText += ". ";
+            }
+            articleText += pText;
+        }
+    }
+
+    private void createAuthorText(Element article){
+        Element authorContainer = article.getElementsByAttributeValueContaining("class", "author").first();
+        if(authorContainer == null)
+            authorContainer =article.getElementsByAttributeValueContaining("class", "byline").first();
+        TextView authorTextView = (TextView) findViewById(R.id.authors);
+        if(authorContainer!=null) {
+            authorTextView.setText(authorContainer.text());
+        }
+        else {
+            authorTextView.setText("Couldn't extract author data.");
         }
     }
 
@@ -66,7 +143,7 @@ public class ArticleActivity extends AppCompatActivity {
             url = intent.getStringExtra("url");
         }
         //In case users didn't include http://
-        if(url.indexOf("http://") == -1){
+        if(url.indexOf("http://") == -1 && url.indexOf("https://") == -1){
             url = "http://"+url;
         }
         webview = (WebView)findViewById(R.id.webView);
@@ -108,8 +185,9 @@ public class ArticleActivity extends AppCompatActivity {
             InputStream sent = getResources().openRawResource(R.raw.en_sent);
             InputStream token = getResources().openRawResource(R.raw.en_token);
             InputStream stop = getResources().openRawResource(R.raw.stopwords);
+            InputStream exstop = getResources().openRawResource(R.raw.extended_stopwords);
             try {
-                tr = new TextRank(sent, token, stop);
+                tr = new TextRank(sent, token, stop, exstop);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -120,47 +198,22 @@ public class ArticleActivity extends AppCompatActivity {
     /**
      * An AsyncTask to fetch a page and its information with JSoup
      */
-    private class FetchPageTask extends AsyncTask<String, Void, Void> {
+    private class FetchPageTask extends AsyncTask<String, Void, Document> {
 
         @Override
-        protected Void doInBackground(String... url) {
+        protected Document doInBackground(String... url) {
             Document doc = null;
-            String html = "";
             try {
                 doc = Jsoup.connect(url[0]).get();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            //Connection succeeded
-            if(doc != null) {
-                html = doc.html();
-                Element article = doc.select("article").first();
-                //If there exists an article tag in the document
-                if(article!=null) {
-                    articleText = "";
-                    Elements articleParagraphs = article.select("p");
-                    for(int i = 0; i < articleParagraphs.size(); i++){
-                        Element paragraph = articleParagraphs.get(i);
-                        //End all sentences with periods so as to ensure sentence separation
-                        //Otherwise, sentences will appear concatenated
-                        String pText = paragraph.text();
-                        if(pText.length()>0 && pText.charAt(pText.length()-1) != ' '){
-                            if(pText.charAt(pText.length()-1)== '.')
-                                pText += " ";
-                            else
-                                pText += ". ";
-                        }
-                        articleText += pText;
-                    }
-                    Log.v(TAG, articleText);
-                }
-            }
-            return null;
+            return doc;
         }
 
-        protected void onPostExecute(Void v) {
-            //Call summarizeArticle upon finish
-            summarizeArticle();
+        protected void onPostExecute(Document doc) {
+            //Call jsoupAnalysis
+            jsoupAnalysis(doc);
         }
     }
 

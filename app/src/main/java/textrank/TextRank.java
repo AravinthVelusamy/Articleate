@@ -1,8 +1,11 @@
 package textrank;
 
+import android.media.session.MediaSession;
 import android.util.Log;
 
+import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
 import java.io.BufferedReader;
@@ -10,10 +13,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Random;
+import java.util.LinkedHashSet;
 
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
@@ -27,19 +32,22 @@ import opennlp.tools.tokenize.TokenizerModel;
  */
 public class TextRank {
     private SimpleWeightedGraph<SentenceVertex, DefaultWeightedEdge> graph;
+    private SimpleGraph<TokenVertex, DefaultEdge> tokenGraph;
     private SentenceDetectorME sdetector;
     private Tokenizer tokenizer;
-    private final double convergenceThreshold = 0.0001;
-    private final double probability = 0.85;
+    private final double CONVERGENCE_THRESHOLD = 0.0001;
+    private final double PROBABILITY = 0.85;
+    private final int COOCCURENCE_WINDOW = 2;
     private final HashSet<String> stopwords = new HashSet<String>();
+    private final HashSet<String> extendedStopwords = new HashSet<String>();
 
 
     /**
      * Initialize TextRank with three inputstreams corresponsing to training information
      * for Sentence extraction, Tokenization, and Part of Speech recognition, respectively.
      */
-    public TextRank(InputStream sent, InputStream token, InputStream stop) throws IOException {
-        init(sent, token, stop);
+    public TextRank(InputStream sent, InputStream token, InputStream stop, InputStream exstop) throws IOException {
+        init(sent, token, stop, exstop);
     }
 
     /**
@@ -47,7 +55,7 @@ public class TextRank {
      * @param sent
      * @param token
      */
-    private void init(InputStream sent, InputStream token, InputStream stop) throws IOException {
+    private void init(InputStream sent, InputStream token, InputStream stop, InputStream exstop) throws IOException {
         // creates a new SentenceDetector, POSTagger, and Tokenizer
         SentenceModel sentModel = new SentenceModel(sent);
         sent.close();
@@ -60,6 +68,12 @@ public class TextRank {
         while ((line = br.readLine()) != null) {
             stopwords.add(line);
         }
+        br.close();
+        br = new BufferedReader(new InputStreamReader(exstop));
+        while ((line = br.readLine()) != null) {
+            extendedStopwords.add(line);
+        }
+        br.close();
     }
 
     /**
@@ -107,14 +121,14 @@ public class TextRank {
         //Loop through tokens in first sentence
         double similarities = 0;
         for (int i = 0; i < tokens1.length; i++) {
-            String word1 = tokens1[i];
+            String word1 = tokens1[i].toLowerCase();
 //            String pos1 =  tags1[i];
 
             //Loop through tokens in second sentence
             for (int j = 0; j < tokens2.length; j++) {
-                String word2 = tokens2[j];
+                String word2 = tokens2[j].toLowerCase();
 
-                if(word1.equals(word2) && !stopwords.contains(word1.toLowerCase())){
+                if(word1.equals(word2) && !extendedStopwords.contains(word1)){
                     similarities += 1;
                 }
             }
@@ -132,7 +146,7 @@ public class TextRank {
      * @return calculated score
      */
     private double calculateScore(SentenceVertex vi){
-        double scorei = (1.0 - probability);
+        double scorei = (1.0 - PROBABILITY);
         double sum = 0;
         //Iterate over edges of vi
         for(DefaultWeightedEdge eij: graph.edgesOf(vi)){
@@ -150,7 +164,7 @@ public class TextRank {
             double scorej = vj.getScore();
             sum += (numerator/denominator)*scorej;
         }
-        scorei += probability*sum;
+        scorei += PROBABILITY *sum;
         return scorei;
     }
 
@@ -161,7 +175,7 @@ public class TextRank {
     private void convergeScores(){
         double error = 1;
         int iterations = 0;
-        while(error > convergenceThreshold){
+        while(error > CONVERGENCE_THRESHOLD){
             for(SentenceVertex v : graph.vertexSet()){
                 double newScore = calculateScore(v);
                 double lastScore = v.getScore();
@@ -172,7 +186,7 @@ public class TextRank {
             error = error/(double)(graph.vertexSet().size());
             iterations +=1;
         }
-        Log.v("TextRank", iterations+"");
+        Log.v("TextRank", iterations + "");
     }
 
     /**
@@ -191,6 +205,120 @@ public class TextRank {
     }
 
     /**
+     * Creates a graph of tokens for TextRank keyword extraction.
+     * @param article Text with which to create a graph
+     */
+    private void createTokenGraph(String article){
+        tokenGraph =  new SimpleGraph<TokenVertex, DefaultEdge>(DefaultEdge.class);
+        String[] tokens = tokenizer.tokenize(article);
+        ArrayList<String> tokensWithoutStopWords = new ArrayList<String>();
+        //Put all to lowercase for comparison
+        for(int i = 0; i < tokens.length; i ++){
+            String curToken = tokens[i];
+            if(!extendedStopwords.contains(curToken.toLowerCase())){
+                tokensWithoutStopWords.add(curToken);
+            }
+        }
+        //LinkedHashSet optimizes removing duplicates and preserving order
+        LinkedHashSet<String> lhsTokens = new LinkedHashSet<String>(tokensWithoutStopWords);
+        //Map String values to their vertices
+        HashMap<String, TokenVertex> tokenVertices = new HashMap<String,TokenVertex>();
+        //Add each vertex
+        for(String token: lhsTokens){
+            TokenVertex v = new TokenVertex(token);
+            tokenVertices.put(token, v);
+            tokenGraph.addVertex(v);
+        }
+        //Add edges
+        for(int i = 0; i < tokensWithoutStopWords.size() - COOCCURENCE_WINDOW; i++){
+            String[] window = new String[COOCCURENCE_WINDOW];
+            for(int j = 0; j < COOCCURENCE_WINDOW; j++){
+                String curToken = tokensWithoutStopWords.get(i+j);
+                window[j] = curToken;
+                for(int k = 0; k < j; k++){
+                    String other = window[k];
+                    TokenVertex otherVertex = tokenVertices.get(other);
+                    TokenVertex curVertex = tokenVertices.get(curToken);
+                    if (curVertex != otherVertex && !tokenGraph.containsEdge(curVertex,otherVertex))
+                        tokenGraph.addEdge(curVertex, otherVertex);
+                }
+            }
+        }
+    }
+
+    /**
+     * Method for calculating token score
+     * Note the difference between this and the method for calculating
+     * SentenceVertex scores. The SentenceVertex graph has edge weights,
+     * which changes the algorithm significantly.
+     * @param vi The vertex whose score will be computed
+     * @return The calculated score
+     */
+    private double calculateTokenScore(TokenVertex vi){
+        double scorei = (1.0 - PROBABILITY);
+        double sum = 0;
+        //Iterate over edges of vi
+        for(DefaultEdge eij: tokenGraph.edgesOf(vi)){
+            double numerator = 1.0;
+            //Get other vertex
+            TokenVertex vj = tokenGraph.getEdgeSource(eij);
+            if(vi == vj){
+                vj = tokenGraph.getEdgeTarget(eij);
+            }
+            //Find the denominator
+            double denominator = tokenGraph.edgesOf(vj).size();
+            double scorej = vj.getScore();
+            sum += (numerator/denominator)*scorej;
+        }
+        scorei += PROBABILITY *sum;
+        return scorei;
+    }
+
+
+    /**
+     * Method that repeatedly calculates scores until error is below the threshold
+     * recommended in the PageRank paper, 0.001 (Supposing that this is percent error of 0.1%)
+     */
+    private void convergeTokenScores(){
+        double error = 1;
+        int iterations = 0;
+        while(error > CONVERGENCE_THRESHOLD){
+            for(TokenVertex v : tokenGraph.vertexSet()){
+                double newScore = calculateTokenScore(v);
+                double lastScore = v.getScore();
+                double scoreError = Math.abs(lastScore - newScore)/newScore;
+                error += scoreError;
+                v.setScore(newScore);
+            }
+            error = error/(double)(tokenGraph.vertexSet().size());
+            iterations +=1;
+        }
+        Log.v("TextRank", iterations+"");
+    }
+
+    public ArrayList<TokenVertex> keywordExtraction(String text){
+        createTokenGraph(text);
+        convergeTokenScores();
+        ArrayList<TokenVertex> sorted = new ArrayList<TokenVertex>();
+        sorted.addAll(tokenGraph.vertexSet());
+        Collections.sort(sorted, new TokenVertexComparator());
+        for(TokenVertex t: sorted){
+            Log.v("TextRank", t.getScore()+" " +t.getToken());
+        }
+        return sorted;
+    }
+
+    /**
+     * Custom comparator for sorting SentenceVertices
+     */
+    private static class TokenVertexComparator implements Comparator<TokenVertex> {
+        @Override
+        public int compare(TokenVertex lhs, TokenVertex rhs) {
+            return Double.compare(rhs.getScore(), lhs.getScore());
+        }
+    }
+
+    /**
      * Custom comparator for sorting SentenceVertices
      */
     private static class SentenceVertexComparator implements Comparator<SentenceVertex> {
@@ -198,6 +326,30 @@ public class TextRank {
         public int compare(SentenceVertex lhs, SentenceVertex rhs) {
             return Double.compare(rhs.getScore(), lhs.getScore());
         }
+    }
+
+    public class TokenVertex {
+
+        private String token;
+        private double score;
+
+        public TokenVertex(String s){
+            token = s;
+            score = 1.0;
+        }
+
+        public String getToken() {
+            return token;
+        }
+
+        public double getScore() {
+            return score;
+        }
+
+        public void setScore(double score) {
+            this.score = score;
+        }
+
     }
 
     /**
@@ -218,7 +370,7 @@ public class TextRank {
             sentence = s;
             tokens = t;
             //Initialize to a random score between 1 and 10, as stated by Mihalcea in the TextRank paper
-            score = new Random().nextDouble()*10.0;
+            score = 1.0;
         }
 
 

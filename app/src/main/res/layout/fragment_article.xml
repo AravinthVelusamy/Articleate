@@ -5,12 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="website.jonreynolds.jreynolds.articleate.ArticleActivityFragment"
-    tools:showIn="@layout/activity_article"
     android:orientation="vertical"
     android:gravity="bottom"
     sothree:umanoPanelHeight="68dp"
     sothree:umanoShadowHeight="8dp">
-
 
     <WebView
         android:layout_width="fill_parent"
@@ -19,7 +17,6 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
-
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -34,38 +31,51 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Summary:"
-            android:id="@+id/textView" />
+            android:id="@+id/summaryLabel" />
 
-        <ScrollView
+        <TextView
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_weight="0.5"
-            android:id="@+id/scrollView" >
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:hint="Summarization"
-                android:id="@+id/key_sentence"
-                android:padding="5dp"
-                android:autoText="false" />
-        </ScrollView>
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:hint="Summarization"
+            android:id="@+id/summary"
+            android:padding="5dp"
+            android:autoText="false"
+            android:minHeight="60dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearance"
+            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Large"
             android:text="Keywords:"
-            android:id="@+id/textView2" />
+            android:id="@+id/keywordsLabel" />
 
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="0.5">
+        <org.apmem.tools.layouts.FlowLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="50dp"
+            android:id="@+id/keywords">
+            >
+        </org.apmem.tools.layouts.FlowLayout>
 
-        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Large"
+            android:text="Authors:"
+            android:id="@+id/authorsLabel" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:hint="Authors"
+            android:id="@+id/authors"
+            android:padding="5dp"
+            android:autoText="false"
+            android:minHeight="60dp" />
 
     </LinearLayout>
 
