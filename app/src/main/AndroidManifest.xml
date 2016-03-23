@@ -60,53 +60,12 @@
                     android:pathPattern="..*/..*/..*/..*"
                     android:scheme="https" />
                 <data
-                    android:host="*.yahoo.com"
-                    android:pathPattern="/..*/..*/..*"
-                    android:scheme="http" />
-                <data
-                    android:host="*.yahoo.com"
-                    android:pathPattern="/tech/..*"
-                    android:scheme="https" />
-                <data
-                    android:host="*.yahoo.com"
-                    android:pathPattern="/politics/..*"
-                    android:scheme="https" />
-                <data
-                    android:host="*.yahoo.com"
-                    android:pathPattern="/news/..*"
-                    android:scheme="https" />
-                <data
-                    android:host="*.yahoo.com"
-                    android:pathPattern="/..*/news/..*"
-                    android:scheme="https" />
-
-                <data
-                    android:host="*.yahoo.com"
-                    android:pathPattern="/..*/..*/..*"
-                    android:scheme="https" />
-                <data
-                    android:host="*.yahoo.com"
-                    android:pathPattern="/tech/..*"
-                    android:scheme="http" />
-                <data
-                    android:host="*.yahoo.com"
-                    android:pathPattern="/politics/..*"
-                    android:scheme="http" />
-                <data
-                    android:host="*.yahoo.com"
-                    android:pathPattern="/news/..*"
-                    android:scheme="http" />
-                <data
-                    android:host="*.yahoo.com"
-                    android:pathPattern="/..*/news/..*"
-                    android:scheme="http" />
-                <data
                     android:host="*.reuters.com"
-                    android:pathPattern="/article/..*"
+                    android:pathPattern="article/..*"
                     android:scheme="https" />
                 <data
                     android:host="*.reuters.com"
-                    android:pathPattern="/article/..*"
+                    android:pathPattern="article/..*"
                     android:scheme="http" />
                 <data
                     android:host="*.washingtonpost.com"

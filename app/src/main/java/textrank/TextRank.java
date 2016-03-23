@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -85,7 +84,8 @@ public class TextRank {
         String[] sentences = sdetector.sentDetect(article);
         //Initialize graph with a vertex for each sentence
         for(String sentence: sentences){
-            SentenceVertex sv = new SentenceVertex(sentence, tokenizer.tokenize(sentence));
+            //Remove punctuation and lowercase each sentence before tokenization
+            SentenceVertex sv = new SentenceVertex(sentence, tokenizer.tokenize(sentence.replaceAll("\\p{P}", "").toLowerCase()));
             graph.addVertex(sv);
         }
         //Create edges
@@ -121,12 +121,11 @@ public class TextRank {
         //Loop through tokens in first sentence
         double similarities = 0;
         for (int i = 0; i < tokens1.length; i++) {
-            String word1 = tokens1[i].toLowerCase();
-//            String pos1 =  tags1[i];
+            String word1 = tokens1[i];
 
             //Loop through tokens in second sentence
             for (int j = 0; j < tokens2.length; j++) {
-                String word2 = tokens2[j].toLowerCase();
+                String word2 = tokens2[j];
 
                 if(word1.equals(word2) && !extendedStopwords.contains(word1)){
                     similarities += 1;
@@ -209,13 +208,14 @@ public class TextRank {
      * @param article Text with which to create a graph
      */
     private void createTokenGraph(String article){
+        //Remove all punctuation and lowercase for tokenization
+        article = article.replaceAll("\\p{P}", "").toLowerCase();
         tokenGraph =  new SimpleGraph<TokenVertex, DefaultEdge>(DefaultEdge.class);
         String[] tokens = tokenizer.tokenize(article);
         ArrayList<String> tokensWithoutStopWords = new ArrayList<String>();
-        //Put all to lowercase for comparison
         for(int i = 0; i < tokens.length; i ++){
             String curToken = tokens[i];
-            if(!extendedStopwords.contains(curToken.toLowerCase())){
+            if(!extendedStopwords.contains(curToken)){
                 tokensWithoutStopWords.add(curToken);
             }
         }
@@ -229,7 +229,7 @@ public class TextRank {
             tokenVertices.put(token, v);
             tokenGraph.addVertex(v);
         }
-        //Add edges
+        //Add edges between words within a certain window
         for(int i = 0; i < tokensWithoutStopWords.size() - COOCCURENCE_WINDOW; i++){
             String[] window = new String[COOCCURENCE_WINDOW];
             for(int j = 0; j < COOCCURENCE_WINDOW; j++){
@@ -302,9 +302,6 @@ public class TextRank {
         ArrayList<TokenVertex> sorted = new ArrayList<TokenVertex>();
         sorted.addAll(tokenGraph.vertexSet());
         Collections.sort(sorted, new TokenVertexComparator());
-        for(TokenVertex t: sorted){
-            Log.v("TextRank", t.getScore()+" " +t.getToken());
-        }
         return sorted;
     }
 
@@ -369,7 +366,6 @@ public class TextRank {
         public SentenceVertex(String s, String[] t){
             sentence = s;
             tokens = t;
-            //Initialize to a random score between 1 and 10, as stated by Mihalcea in the TextRank paper
             score = 1.0;
         }
 

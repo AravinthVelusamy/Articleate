@@ -1,7 +1,6 @@
 package website.jonreynolds.jreynolds.articleate;
 
 import android.content.Intent;
-import android.media.session.MediaSession;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -10,11 +9,9 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.apmem.tools.layouts.FlowLayout;
@@ -45,6 +42,9 @@ public class ArticleActivity extends AppCompatActivity {
             ArrayList<TextRank.SentenceVertex> rankedSentences = tr.sentenceExtraction(articleText);
             ArrayList<TextRank.TokenVertex> rankedTokens = tr.keywordExtraction(articleText);
             String summary = rankedSentences.get(0).getSentence();
+            for(int i = 0; i < 5; i ++){
+                Log.v(TAG, rankedSentences.get(i).getSentence());
+            }
             summaryText.setText(summary);
             populateKeywordsContainer(rankedTokens);
         }
@@ -54,7 +54,7 @@ public class ArticleActivity extends AppCompatActivity {
     }
 
     /**
-     * Get top 8 keywords and careate buttons for them
+     * Get top 8 keywords and create buttons for them
      */
     private void populateKeywordsContainer(ArrayList<TextRank.TokenVertex> rankedTokens){
         FlowLayout keywordsContainer = (FlowLayout)findViewById(R.id.keywords);
@@ -72,21 +72,13 @@ public class ArticleActivity extends AppCompatActivity {
      * @param doc JSoup document initialized on current page
      */
     private void jsoupAnalysis(Document doc){
-        //Connection succeeded
-        if(doc != null) {
-            //Try different methods of article retrieval
-            Element article = doc.select("main").select("article").first();
-            if(article == null)
-                article = doc.select("article").first();
-            //If there exists an article tag in the document
-            if(article!=null) {
-                createArticleText(article);
-                createAuthorText(article);
-            }
-        }
-        else {
-            TextView authorTextView = (TextView) findViewById(R.id.authors);
-            authorTextView.setText("Couldn't extract author data.");
+        Element article = doc.select("main").select("article").first();
+        if(article == null)
+            article = doc.select("article").first();
+        //If there exists an article tag in the document
+        if(article!=null) {
+            createArticleText(article);
+            createAuthorText(doc);
         }
         summarizeArticle();
     }
@@ -104,7 +96,7 @@ public class ArticleActivity extends AppCompatActivity {
             //Otherwise, sentences will appear concatenated
             String pText = paragraph.text();
             if(pText.length()>0 && pText.charAt(pText.length()-1) != ' '){
-                if(pText.charAt(pText.length()-1)== '.')
+                if(pText.charAt(pText.length()-1)== '.' || pText.charAt(pText.length()-1)=='"')
                     pText += " ";
                 else
                     pText += ". ";
@@ -113,10 +105,11 @@ public class ArticleActivity extends AppCompatActivity {
         }
     }
 
-    private void createAuthorText(Element article){
-        Element authorContainer = article.getElementsByAttributeValueContaining("class", "author").first();
-        if(authorContainer == null)
-            authorContainer =article.getElementsByAttributeValueContaining("class", "byline").first();
+    private void createAuthorText(Element doc){
+        Element authorContainer = doc.getElementsByAttributeValueContaining("class", "byline").first();
+        if(authorContainer == null) {
+            authorContainer = doc.getElementsByAttributeValueContaining("class", "author").first();
+        }
         TextView authorTextView = (TextView) findViewById(R.id.authors);
         if(authorContainer!=null) {
             authorTextView.setText(authorContainer.text());
@@ -142,13 +135,12 @@ public class ArticleActivity extends AppCompatActivity {
         else {
             url = intent.getStringExtra("url");
         }
-        //In case users didn't include http://
+        //In case users didn't include http:// or https://
         if(url.indexOf("http://") == -1 && url.indexOf("https://") == -1){
             url = "http://"+url;
         }
         webview = (WebView)findViewById(R.id.webView);
         webview.setWebViewClient(new WebViewClient(){
-
             @Override
             /**
              * Run AsyncTask to fetch page with JSoup
@@ -160,6 +152,24 @@ public class ArticleActivity extends AppCompatActivity {
 
         });
         webview.loadUrl(url);
+    }
+
+    /**
+     * Check if TextRank instance exists. If not, create it.
+     */
+    private void initializeTextRank(){
+        //Open raw resources to initialize OpenNLP tools for TextRank
+        if(tr==null){
+            InputStream sent = getResources().openRawResource(R.raw.en_sent);
+            InputStream token = getResources().openRawResource(R.raw.en_token);
+            InputStream stop = getResources().openRawResource(R.raw.stopwords);
+            InputStream exstop = getResources().openRawResource(R.raw.extended_stopwords);
+            try {
+                tr = new TextRank(sent, token, stop, exstop);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -180,18 +190,7 @@ public class ArticleActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        //Open raw resources to initialize OpenNLP tools for TextRank
-        if(tr==null){
-            InputStream sent = getResources().openRawResource(R.raw.en_sent);
-            InputStream token = getResources().openRawResource(R.raw.en_token);
-            InputStream stop = getResources().openRawResource(R.raw.stopwords);
-            InputStream exstop = getResources().openRawResource(R.raw.extended_stopwords);
-            try {
-                tr = new TextRank(sent, token, stop, exstop);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        initializeTextRank();
         initializeWebView();
     }
 
@@ -204,6 +203,7 @@ public class ArticleActivity extends AppCompatActivity {
         protected Document doInBackground(String... url) {
             Document doc = null;
             try {
+                Log.v("JSoup", "Attempting to connect to "+ url[0]);
                 doc = Jsoup.connect(url[0]).get();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -213,7 +213,12 @@ public class ArticleActivity extends AppCompatActivity {
 
         protected void onPostExecute(Document doc) {
             //Call jsoupAnalysis
-            jsoupAnalysis(doc);
+            if(doc!=null) {
+                jsoupAnalysis(doc);
+            }
+            else{
+                Log.v(TAG, "Couldn't load page.");
+            }
         }
     }
 
