@@ -1,6 +1,5 @@
 package textrank;
 
-import android.media.session.MediaSession;
 import android.util.Log;
 
 import org.jgrapht.graph.DefaultEdge;
@@ -84,8 +83,8 @@ public class TextRank {
         String[] sentences = sdetector.sentDetect(article);
         //Initialize graph with a vertex for each sentence
         for(String sentence: sentences){
-            //Remove punctuation and lowercase each sentence before tokenization
-            SentenceVertex sv = new SentenceVertex(sentence, tokenizer.tokenize(sentence.replaceAll("\\p{P}", "").toLowerCase()));
+            //Remove punctuation for each sentence
+            SentenceVertex sv = new SentenceVertex(sentence, tokenizer.tokenize(sentence.replaceAll("\\p{P}", "")));
             graph.addVertex(sv);
         }
         //Create edges
