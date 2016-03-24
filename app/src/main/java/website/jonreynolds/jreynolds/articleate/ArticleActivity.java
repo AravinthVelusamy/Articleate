@@ -1,5 +1,6 @@
 package website.jonreynolds.jreynolds.articleate;
 
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -9,6 +10,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -82,10 +84,17 @@ public class ArticleActivity extends AppCompatActivity {
         //Show results in-app
         summaryText.setText(summary);
         authorText.setText(author);
+        keywordsContainer.removeAllViews();
         if(keywords != null) {
             for (String s : keywords) {
                 TextView newButton = new Button(this);
                 newButton.setText(s);
+                newButton.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        DialogFragment newFragment = new ResearchDialogFragment();
+                        newFragment.show(getFragmentManager(), "research");
+                    }
+                });
                 keywordsContainer.addView(newButton);
             }
         }
@@ -166,7 +175,7 @@ public class ArticleActivity extends AppCompatActivity {
 
         protected void onPostExecute(Document doc) {
             //New page, clear out past keywords
-            keywordsContainer.removeAllViews();
+            keywords=null;
             //Call jsoupAnalysis
             if(doc!=null) {
                 Log.v(TAG, "Loaded the page.");
