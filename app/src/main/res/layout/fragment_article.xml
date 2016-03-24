@@ -7,7 +7,7 @@
     tools:context="website.jonreynolds.jreynolds.articleate.ArticleActivityFragment"
     android:orientation="vertical"
     android:gravity="bottom"
-    sothree:umanoPanelHeight="68dp"
+    sothree:umanoPanelHeight="100dp"
     sothree:umanoShadowHeight="8dp">
 
     <WebView
@@ -71,7 +71,6 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:hint="Authors"
             android:id="@+id/authors"
             android:padding="5dp"
             android:autoText="false"

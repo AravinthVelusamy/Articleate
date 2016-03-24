@@ -10,7 +10,17 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListView;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,6 +39,30 @@ public class MainActivity extends AppCompatActivity {
 //                        .setAction("Action", null).show();
 //            }
 //        });
+
+        loadCachedSummaries();
+    }
+
+    private void loadCachedSummaries(){
+        File cachedSummaries = new File(getCacheDir(), "summaries.txt");
+        ArrayList<String> summaries = new ArrayList<String>();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(cachedSummaries));
+            String line;
+            while ((line = br.readLine()) != null) {
+                summaries.add(line);
+            }
+            br.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //Make newest lines first
+        Collections.reverse(summaries);
+        ArrayAdapter<String> summaryListViewAdapter = new ArrayAdapter<String>(this, R.layout.list_item_summary, R.id.list_item_summary_textview, summaries);
+        ListView summaryListView = (ListView)findViewById(R.id.listView);
+        summaryListView.setAdapter(summaryListViewAdapter);
     }
 
     @Override

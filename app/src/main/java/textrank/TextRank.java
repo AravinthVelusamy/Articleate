@@ -25,7 +25,7 @@ import opennlp.tools.tokenize.TokenizerME;
 import opennlp.tools.tokenize.TokenizerModel;
 
 /**
- * Singleton to perform a modified TextRank-algorithm on a body of text
+ * Class to perform different TextRank-algorithms on a body of text
  * Created by jonathanreynolds on 3/19/16.
  */
 public class TextRank {
@@ -42,7 +42,7 @@ public class TextRank {
 
     /**
      * Initialize TextRank with three inputstreams corresponsing to training information
-     * for Sentence extraction, Tokenization, and Part of Speech recognition, respectively.
+     * for Sentence extraction and Tokenization, as well as stopwords lists for filtering.
      */
     public TextRank(InputStream sent, InputStream token, InputStream stop, InputStream exstop) throws IOException {
         init(sent, token, stop, exstop);

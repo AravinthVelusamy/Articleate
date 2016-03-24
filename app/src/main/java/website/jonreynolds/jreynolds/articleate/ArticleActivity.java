@@ -20,8 +20,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 import textrank.TextRank;
@@ -29,7 +33,13 @@ import textrank.TextRank;
 public class ArticleActivity extends AppCompatActivity {
     private final String TAG = "ArticleActivity";
     private WebView webview;
+    private TextView authorText;
+    private TextView summaryText;
+    FlowLayout keywordsContainer;
     private Document document;
+    private String summary;
+    private String author;
+    private String[] keywords;
     private static TextRank tr;
 
 
@@ -50,12 +60,36 @@ public class ArticleActivity extends AppCompatActivity {
 //        });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        webview = (WebView)findViewById(R.id.webView);
+        summaryText = (TextView)findViewById(R.id.summary);
+        authorText = (TextView) findViewById(R.id.authors);
+        keywordsContainer = (FlowLayout)findViewById(R.id.keywords);
 
         initializeTextRank();
         initializeWebView();
+    }
+
+    private void runAnalysis(){
+        createAuthorText();
         Element article = getArticleFromDocument();
-        createAuthorText(article);;
-        summarizeArticle(article);
+        if(article!=null){
+            summarizeArticle(article);
+        }
+        else{
+            summary = "No article could be extracted.";
+        }
+
+        //Show results in-app
+        summaryText.setText(summary);
+        authorText.setText(author);
+        if(keywords != null) {
+            for (String s : keywords) {
+                TextView newButton = new Button(this);
+                newButton.setText(s);
+                keywordsContainer.addView(newButton);
+            }
+        }
+
     }
 
 
@@ -99,8 +133,7 @@ public class ArticleActivity extends AppCompatActivity {
         if(url.indexOf("http://") == -1 && url.indexOf("https://") == -1){
             url = "http://"+url;
         }
-        webview = (WebView)findViewById(R.id.webView);
-        webview.setWebViewClient(new WebViewClient(){
+        webview.setWebViewClient(new WebViewClient() {
             @Override
             /**
              * Run AsyncTask to fetch page with JSoup
@@ -132,13 +165,18 @@ public class ArticleActivity extends AppCompatActivity {
         }
 
         protected void onPostExecute(Document doc) {
+            //New page, clear out past keywords
+            keywordsContainer.removeAllViews();
             //Call jsoupAnalysis
             if(doc!=null) {
                 Log.v(TAG, "Loaded the page.");
                 ArticleActivity.this.document = doc;
+                runAnalysis();
+
             }
             else{
                 Log.v(TAG, "Couldn't load page.");
+                summary = "Page couldn't be loaded for info extraction.";
             }
         }
     }
@@ -148,28 +186,31 @@ public class ArticleActivity extends AppCompatActivity {
      * Perform needed information scraping with the JSoup Document
      */
     private Element getArticleFromDocument(){
+        //Start specific. Some websites have smaller psuedo articles at the top of the page
         Element article = document.select("main").select("article").first();
         if(article == null)
             article = document.select("article").first();
-        //If there exists an article tag in the document
+        if(article == null)
+            article = document.getElementsByAttributeValueContaining("class", "article").first();
+        if(article == null)
+            article = document.getElementsByAttributeValueContaining("class", "story").first();
         return article;
     }
 
     /**
      * Find author text based on common class names for authors
      */
-    private void createAuthorText(Element article){
-        Element authorContainer = article.getElementsByAttributeValueContaining("class", "byline").first();
+    private void createAuthorText(){
+        Element authorContainer = document.getElementsByAttributeValueContaining("class", "byline").first();
         if(authorContainer == null) {
-            authorContainer = article.getElementsByAttributeValueContaining("class", "author").first();
+            authorContainer = document.getElementsByAttributeValueContaining("class", "author").first();
         }
-        TextView authorTextView = (TextView) findViewById(R.id.authors);
         if(authorContainer!=null) {
             Log.v("Author Information", authorContainer.text());
-            authorTextView.setText(authorContainer.text());
+            author = authorContainer.text();
         }
         else {
-            authorTextView.setText("Couldn't extract author data.");
+            author = "Couldn't extract author data.";
         }
     }
 
@@ -182,15 +223,28 @@ public class ArticleActivity extends AppCompatActivity {
         if(articleText != null && articleText != ""){
             ArrayList<TextRank.SentenceVertex> rankedSentences = tr.sentenceExtraction(articleText);
             ArrayList<TextRank.TokenVertex> rankedTokens = tr.keywordExtraction(articleText);
-            String summary = rankedSentences.get(0).getSentence();
+            summary = rankedSentences.get(0).getSentence();
             for(int i = 0; i < 5 && i < rankedSentences.size(); i ++){
-                Log.v("Ranked Sentence #" + i+1, rankedSentences.get(i).getSentence());
+                Log.v("Ranked Sentence #" + (i+1), rankedSentences.get(i).getSentence());
             }
-            summaryText.setText(summary);
-            populateKeywordsContainer(rankedTokens);
+            keywords = new String[8];
+            for(int i = 0; i < rankedTokens.size() && i < keywords.length; i++){
+                TextRank.TokenVertex tv = rankedTokens.get(i);
+                keywords[i] = tv.getToken();
+            }
+            //Save to cache
+            try {
+                File cachedSummaries= new File(getCacheDir(), "summaries.txt");
+                //Open PrintWriter in append mode.
+                PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(cachedSummaries, true)));
+                pw.println(summary);
+                pw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         else{
-            summaryText.setText("Unable to process this article");
+            summary = "Unable to process this article";
         }
     }
 
@@ -199,8 +253,6 @@ public class ArticleActivity extends AppCompatActivity {
      * @param article JSoup article element
      */
     private String createArticleText(Element article){
-        if (article == null)
-            return null;
         String articleText = "";
         Elements articleParagraphs = article.select("p");
         String articleParagraphText = articleParagraphs.text();
@@ -208,11 +260,6 @@ public class ArticleActivity extends AppCompatActivity {
         if((double)article.text().length()*0.4 >= articleParagraphText.length()){
             //Hope that they're under the tag paragraph (prime example, CNN, who just changed their article HTML layout this week)
             articleParagraphs = article.getElementsByAttributeValueContaining("class", "paragraph");
-        }
-        //If that doesn't work
-        if((double)article.text().length()*0.4 >= articleParagraphText.length()){
-            //Use the entire text of the article
-            return article.text();
         }
         for(int i = 0; i < articleParagraphs.size(); i++){
             Element paragraph = articleParagraphs.get(i);
@@ -228,19 +275,6 @@ public class ArticleActivity extends AppCompatActivity {
             articleText += pText;
         }
         return articleText;
-    }
-    /**
-     * Get top 8 keywords and create buttons for them
-     */
-    private void populateKeywordsContainer(ArrayList<TextRank.TokenVertex> rankedTokens){
-        FlowLayout keywordsContainer = (FlowLayout)findViewById(R.id.keywords);
-        keywordsContainer.removeAllViews();
-        for(int i = 0; i < rankedTokens.size() && i < 8; i++){
-            TextRank.TokenVertex tv = rankedTokens.get(i);
-            TextView newButton = new Button(this);
-            newButton.setText(tv.getToken());
-            keywordsContainer.addView(newButton);
-        }
     }
 
 }
