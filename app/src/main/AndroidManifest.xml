@@ -33,7 +33,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!--
-                    Allow intent filter to apply to all major news sources
+                    Allow intent filter to apply to major news sources
                 -->
                 <data
                     android:host="*.cnn.com"

@@ -1,7 +1,13 @@
 package website.jonreynolds.jreynolds.articleate;
 
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.SearchManager;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -40,8 +46,10 @@ public class ArticleActivity extends AppCompatActivity {
     FlowLayout keywordsContainer;
     private Document document;
     private String summary;
+    private String[] summaries;
     private String author;
     private String[] keywords;
+    private String selectedKeyword;
     private static TextRank tr;
 
 
@@ -51,15 +59,6 @@ public class ArticleActivity extends AppCompatActivity {
         setContentView(R.layout.activity_article);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         webview = (WebView)findViewById(R.id.webView);
@@ -71,6 +70,9 @@ public class ArticleActivity extends AppCompatActivity {
         initializeWebView();
     }
 
+    /**
+     * Run all processing on JSoup extracted elements
+     */
     private void runAnalysis(){
         createAuthorText();
         Element article = getArticleFromDocument();
@@ -80,25 +82,28 @@ public class ArticleActivity extends AppCompatActivity {
         else{
             summary = "No article could be extracted.";
         }
+    }
 
+    private void showResults(){
         //Show results in-app
         summaryText.setText(summary);
         authorText.setText(author);
         keywordsContainer.removeAllViews();
         if(keywords != null) {
-            for (String s : keywords) {
+            for (final String s : keywords) {
                 TextView newButton = new Button(this);
                 newButton.setText(s);
                 newButton.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
+                        ArticleActivity.this.selectedKeyword = s;
                         DialogFragment newFragment = new ResearchDialogFragment();
                         newFragment.show(getFragmentManager(), "research");
                     }
                 });
+                newButton.getBackground().setColorFilter(getResources().getColor(R.color.colorAccent), PorterDuff.Mode.MULTIPLY);
                 keywordsContainer.addView(newButton);
             }
         }
-
     }
 
 
@@ -180,8 +185,8 @@ public class ArticleActivity extends AppCompatActivity {
             if(doc!=null) {
                 Log.v(TAG, "Loaded the page.");
                 ArticleActivity.this.document = doc;
+                //Only run analysis on successful document load
                 runAnalysis();
-
             }
             else{
                 Log.v(TAG, "Couldn't load page.");
@@ -219,6 +224,7 @@ public class ArticleActivity extends AppCompatActivity {
             author = authorContainer.text();
         }
         else {
+            Log.v("Author Information", "Couldn't extract author data");
             author = "Couldn't extract author data.";
         }
     }
@@ -232,22 +238,22 @@ public class ArticleActivity extends AppCompatActivity {
         if(articleText != null && articleText != ""){
             ArrayList<TextRank.SentenceVertex> rankedSentences = tr.sentenceExtraction(articleText);
             ArrayList<TextRank.TokenVertex> rankedTokens = tr.keywordExtraction(articleText);
+            //Get summary
             summary = rankedSentences.get(0).getSentence();
             for(int i = 0; i < 5 && i < rankedSentences.size(); i ++){
                 Log.v("Ranked Sentence #" + (i+1), rankedSentences.get(i).getSentence());
             }
+
+            //Get best 8 keywords
             keywords = new String[8];
             for(int i = 0; i < rankedTokens.size() && i < keywords.length; i++){
                 TextRank.TokenVertex tv = rankedTokens.get(i);
                 keywords[i] = tv.getToken();
             }
+
             //Save to cache
             try {
-                File cachedSummaries= new File(getCacheDir(), "summaries.txt");
-                //Open PrintWriter in append mode.
-                PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(cachedSummaries, true)));
-                pw.println(summary);
-                pw.close();
+                saveSummaryToCache();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -258,18 +264,30 @@ public class ArticleActivity extends AppCompatActivity {
     }
 
     /**
+     * Save a successful summary to the cache
+     * @throws IOException
+     */
+    private void saveSummaryToCache() throws IOException {
+        File cachedSummaries= new File(getCacheDir(), "summaries.txt");
+        //Open PrintWriter in append mode.
+        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(cachedSummaries, true)));
+        pw.println(summary);
+        pw.close();
+    }
+
+    /**
      * Preprocess and correct the article text extracted via JSoup.
      * @param article JSoup article element
      */
     private String createArticleText(Element article){
         String articleText = "";
         Elements articleParagraphs = article.select("p");
-        String articleParagraphText = articleParagraphs.text();
         //If the article <p> elements don't make up most of the text in the article
-        if((double)article.text().length()*0.4 >= articleParagraphText.length()){
+        if((double)article.text().length()*0.4 >= articleParagraphs.text().length()){
             //Hope that they're under the tag paragraph (prime example, CNN, who just changed their article HTML layout this week)
             articleParagraphs = article.getElementsByAttributeValueContaining("class", "paragraph");
         }
+        //Process each paragraph
         for(int i = 0; i < articleParagraphs.size(); i++){
             Element paragraph = articleParagraphs.get(i);
             //End all sentences with periods so as to ensure sentence separation
@@ -286,4 +304,51 @@ public class ArticleActivity extends AppCompatActivity {
         return articleText;
     }
 
+    @SuppressLint("ValidFragment")
+    private class ResearchDialogFragment extends DialogFragment {
+        private int selectedItem;
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the Builder class for convenient dialog construction
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle(R.string.research_dialog_title)
+                    .setSingleChoiceItems(R.array.research_options, 0,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    selectedItem = which;
+                                }
+                            })
+                    .setPositiveButton(R.string.research_dialog_positive, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            switch (selectedItem){
+                                case 0: {
+                                    Intent i = new Intent(Intent.ACTION_WEB_SEARCH);
+                                    i.putExtra(SearchManager.QUERY, ArticleActivity.this.selectedKeyword);
+                                    startActivity(i);
+                                } break;
+
+                                case 1: {
+                                    Intent i = new Intent(Intent.ACTION_VIEW);
+                                    i.setData(Uri.parse("https://en.wikipedia.org/wiki/" + ArticleActivity.this.selectedKeyword));
+                                    startActivity(i);
+                                } break;
+
+                                case 2: {
+                                    Intent i = new Intent(Intent.ACTION_VIEW);
+                                    i.setData(Uri.parse("http://www.imdb.com/find?q=" + ArticleActivity.this.selectedKeyword + "&s=all"));
+                                    startActivity(i);
+                                } break;
+                            }
+                        }
+                    })
+                    .setNegativeButton(R.string.research_dialog_negative, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // User cancelled the dialog
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
+        }
+    }
 }

@@ -5,4 +5,6 @@
     <string name="research_dialog_title">Research this term:</string>
     <string name="research_dialog_positive">Search now!</string>
     <string name="research_dialog_negative">Cancel</string>
+    <string name="edit_url_hint">Enter a URL to browse for articles</string>
+    <string name="summaries_title">Recent Summarizations</string>
 </resources>

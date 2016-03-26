@@ -8,7 +8,9 @@
     android:orientation="vertical"
     android:gravity="bottom"
     sothree:umanoPanelHeight="100dp"
-    sothree:umanoShadowHeight="8dp">
+    sothree:umanoShadowHeight="8dp"
+    android:background="@color/colorBackground"
+    android:theme="@style/Base.ThemeOverlay.AppCompat.Dark">
 
     <WebView
         android:layout_width="fill_parent"
@@ -40,8 +42,7 @@
             android:hint="Summarization"
             android:id="@+id/summary"
             android:padding="5dp"
-            android:autoText="false"
-            android:minHeight="60dp" />
+            android:autoText="false"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -54,7 +55,6 @@
             xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:minHeight="50dp"
             android:id="@+id/keywords">
             >
         </org.apmem.tools.layouts.FlowLayout>
@@ -73,8 +73,7 @@
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:id="@+id/authors"
             android:padding="5dp"
-            android:autoText="false"
-            android:minHeight="60dp" />
+            android:autoText="false" />
 
     </LinearLayout>
 
