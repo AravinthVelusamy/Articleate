@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -115,24 +116,21 @@ public class TextRank {
      * @return a similarity score
      */
     private double calculateSimilarity(SentenceVertex v1, SentenceVertex v2){
-        String[] tokens1 = v1.getTokens();
-        String[] tokens2 = v2.getTokens();
-        //Loop through tokens in first sentence
+        //Use HashSet to ensure efficient intersection of tokens [ O(N) ]
+        String[] s1TokenArray = v1.getTokens();
+        HashSet<String> s1TokenHashSet = v1.getTokensAsHashSet();
+        String[] s2TokenArray = v2.getTokens();
+        //Loop through tokens in second sentence
         double similarities = 0;
-        for (int i = 0; i < tokens1.length; i++) {
-            String word1 = tokens1[i];
-
-            //Loop through tokens in second sentence
-            for (int j = 0; j < tokens2.length; j++) {
-                String word2 = tokens2[j];
-
-                if(word1.equals(word2) && !extendedStopwords.contains(word1)){
-                    similarities += 1;
-                }
+        for (int i = 0; i < s2TokenArray.length; i++) {
+            String word = s2TokenArray[i];
+            //Check if in first sentence
+            if(s1TokenHashSet.contains(word)){
+                similarities++;
             }
         }
-        int numWordsInSentence1 = tokens1.length;
-        int numWordsInSentence2 = tokens2.length;
+        int numWordsInSentence1 = s1TokenArray.length;
+        int numWordsInSentence2 = s2TokenArray.length;
         double similarity = similarities/(Math.log(numWordsInSentence1)+Math.log(numWordsInSentence2));
         return similarity;
     }
@@ -218,8 +216,8 @@ public class TextRank {
                 tokensWithoutStopWords.add(curToken);
             }
         }
-        //LinkedHashSet optimizes removing duplicates and preserving order
-        LinkedHashSet<String> lhsTokens = new LinkedHashSet<String>(tokensWithoutStopWords);
+        //HashSet optimizes removing duplicates
+        HashSet<String> lhsTokens = new HashSet<String>(tokensWithoutStopWords);
         //Map String values to their vertices
         HashMap<String, TokenVertex> tokenVertices = new HashMap<String,TokenVertex>();
         //Add each vertex
@@ -359,6 +357,7 @@ public class TextRank {
 
         private String sentence;
         private String[] tokens;
+        private HashSet<String> tokenHashSet;
         private double score;
 
         /**
@@ -368,6 +367,7 @@ public class TextRank {
         public SentenceVertex(String s, String[] t){
             sentence = s;
             tokens = t;
+            tokenHashSet = new HashSet<String>(Arrays.asList(t));
             score = 1.0;
         }
 
@@ -388,6 +388,14 @@ public class TextRank {
             return tokens;
         }
 
+
+        /**
+         * Returns the tokens of this sentence
+         * @return Array of token strings
+         */
+        public HashSet<String> getTokensAsHashSet() {
+            return tokenHashSet;
+        }
 
         /**
          * Getter for the score field
