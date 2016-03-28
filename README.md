@@ -2,14 +2,14 @@
 Built for Capital One's [MindSumo challenge](https://www.mindsumo.com/contests/565) and competitive entrance to Capital One's [annual SE Summit](https://www.youtube.com/watch?v=c5efHTl40dE). Articleate is an Android application that performs text analysis and extraction on internet news articles.
 
 <p align="center">
-  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-31-14.png" width="250" />
+  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-31-14.png" width="210" />
   
-  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-24-46.png" width="250" />
+  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-24-46.png" width="210" />
   
-  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-24-53.png" width="250" />
+  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-24-53.png" width="210" />
   
   
-  <img  src="https://github.com/J0Nreynolds/Articleate/blob/master/Screenshots/Screenshot_2016-03-27-18-23-19.png" width="250" />
+  <img  src="https://github.com/J0Nreynolds/Articleate/blob/master/Screenshots/Screenshot_2016-03-27-18-23-19.png" width="210" />
 </p>
 
 ##Dependencies
@@ -67,9 +67,9 @@ Touching a keyword gives you multiple options for further research:
 Articleate has incorporated intent filters for the following news sources' websites:
 
 * CNN
-* New York Times
-* Washington Post
-* Huffington Post
+* The New York Times
+* The Washington Post
+* The Huffington Post
 * The Guardian
 * Reuters
 
@@ -77,3 +77,32 @@ Articleate has incorporated intent filters for the following news sources' websi
 In specific, I've examined the URL patterns for each of the above news sources, tailoring the intent filters to those URL patterns. Therefore, the intent filters are only triggered when navigating to an article on the website, not on pages like the homepage, about page, etc.
 
 ##Results
+Articleate has been tested on the following news sources (allow a checkmark to represent successful summarizations):
+
+- [X] CNN
+- [X] The Huffington Post
+- [X] The New York Times
+- [X] Wired
+- [X] IGN
+- [X] The Guardian
+- [X] The Washington Post
+- [X] Reuters
+- [ ] Yahoo
+
+**Note:** (JSoup is unable to correctly load Yahoo articles. This may be due to JavaScript loading mechanisms on the pages)
+
+Below are examples of summaries on some of the above news sources. These are summaries from CNN, The Huffington Post, The New York Times, Wired, IGN, and The Washington Post, respectively.
+
+<p display="">
+  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-41-54.png" width="210" />
+
+  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-27-53.png" width="210" />
+
+  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-30-57.png" width="210" />
+
+  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-24-53.png" width="210" />
+
+  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-50-06.png" width="210" />
+
+  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-26-35.png" width="210" />
+</p>
