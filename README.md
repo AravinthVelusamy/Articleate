@@ -11,7 +11,8 @@ Built for Capital One's [MindSumo challenge](https://www.mindsumo.com/contests/5
   
   <img  src="https://github.com/J0Nreynolds/Articleate/blob/master/Screenshots/Screenshot_2016-03-27-18-23-19.png" width="210" />
 </p>
-
+####Table of Contents
+* [Articleate](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#articleate)
 * [Dependencies](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#dependencies)
 * [About the application](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#about-the-application)
  * [TextRank implementation](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#textrank-implementation)
