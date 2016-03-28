@@ -7,12 +7,15 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -36,14 +39,21 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
+        //Allow people to use keyboard search key to initialize the summarization Activity
+        final EditText urlInput = (EditText) findViewById(R.id.url_bar);
+        urlInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    String url = urlInput.getText().toString();
+                    Intent articleIntent = new Intent(MainActivity.this, ArticleActivity.class);
+                    articleIntent.putExtra("url", url);
+                    startActivity(articleIntent);
+                    return true;
+                }
+                return false;
+            }
+        });
 
         try {
             loadCachedSummaries();
@@ -94,33 +104,17 @@ public class MainActivity extends AppCompatActivity {
         summaryListView.setAdapter(summaryListViewAdapter);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
+    /**
+     * Allow people to use the button to perform the search and launch the
+     * Articleate Summarization activity.
+     * @param view
+     */
     public void handleButtonClick(View view){
-        EditText urlInput = (EditText)findViewById(R.id.editText);
+        EditText urlInput = (EditText)findViewById(R.id.url_bar);
         String url = urlInput.getText().toString();
         Intent articleIntent = new Intent(this, ArticleActivity.class);
         articleIntent.putExtra("url", url);
         startActivity(articleIntent);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 }

@@ -5,8 +5,10 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.SearchManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -16,10 +18,12 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.apmem.tools.layouts.FlowLayout;
@@ -43,6 +47,7 @@ public class ArticleActivity extends AppCompatActivity {
     private WebView webview;
     private TextView authorText;
     private TextView summaryText;
+    private ProgressBar progressBar;
     FlowLayout keywordsContainer;
     private Document document;
     private String summary;
@@ -65,6 +70,7 @@ public class ArticleActivity extends AppCompatActivity {
         summaryText = (TextView)findViewById(R.id.summary);
         authorText = (TextView) findViewById(R.id.authors);
         keywordsContainer = (FlowLayout)findViewById(R.id.keywords);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         initializeTextRank();
         initializeWebView();
@@ -82,8 +88,17 @@ public class ArticleActivity extends AppCompatActivity {
         else{
             summary = "No article could be extracted.";
         }
+
+        progressBar.setVisibility(View.GONE);
+        setProgress(100);
+
+        //Make the results seen in the slide-up layout
+        showResults();
     }
 
+    /**
+     * Change the views in the slide-up layout to match the extracted information
+     */
     private void showResults(){
         //Show results in-app
         summaryText.setText(summary);
@@ -149,12 +164,17 @@ public class ArticleActivity extends AppCompatActivity {
         }
         webview.setWebViewClient(new WebViewClient() {
             @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon){
+                progressBar.setVisibility(View.VISIBLE);
+                setProgress(0);
+                FetchPageTask fetch = new FetchPageTask();
+                fetch.execute(url);
+            }
+            @Override
             /**
              * Run AsyncTask to fetch page with JSoup
              */
             public void onPageFinished(WebView view, String url) {
-                FetchPageTask fetch = new FetchPageTask();
-                fetch.execute(url);
             }
 
         });
@@ -304,13 +324,16 @@ public class ArticleActivity extends AppCompatActivity {
         return articleText;
     }
 
+    /**
+     * The AlertDialog that allows one to research keywords of a summarized article
+     */
     @SuppressLint("ValidFragment")
     private class ResearchDialogFragment extends DialogFragment {
         private int selectedItem;
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             // Use the Builder class for convenient dialog construction
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), AlertDialog.THEME_DEVICE_DEFAULT_DARK);
             builder.setTitle(R.string.research_dialog_title)
                     .setSingleChoiceItems(R.array.research_options, 0,
                             new DialogInterface.OnClickListener() {
@@ -323,18 +346,24 @@ public class ArticleActivity extends AppCompatActivity {
                         public void onClick(DialogInterface dialog, int id) {
                             switch (selectedItem){
                                 case 0: {
+                                    Intent i = new Intent(Intent.ACTION_VIEW);
+                                    i.setData(Uri.parse("https://www.google.com/search?aq=f&hl=en&gl=us&tbm=nws&btnmeta_news_search=1&q=" + ArticleActivity.this.selectedKeyword));
+                                    startActivity(i);
+                                } break;
+
+                                case 1: {
                                     Intent i = new Intent(Intent.ACTION_WEB_SEARCH);
                                     i.putExtra(SearchManager.QUERY, ArticleActivity.this.selectedKeyword);
                                     startActivity(i);
                                 } break;
 
-                                case 1: {
+                                case 2: {
                                     Intent i = new Intent(Intent.ACTION_VIEW);
                                     i.setData(Uri.parse("https://en.wikipedia.org/wiki/" + ArticleActivity.this.selectedKeyword));
                                     startActivity(i);
                                 } break;
 
-                                case 2: {
+                                case 3: {
                                     Intent i = new Intent(Intent.ACTION_VIEW);
                                     i.setData(Uri.parse("http://www.imdb.com/find?q=" + ArticleActivity.this.selectedKeyword + "&s=all"));
                                     startActivity(i);

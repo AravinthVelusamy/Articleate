@@ -315,7 +315,7 @@ public class TextRank {
     }
 
     /**
-     * Custom comparator for sorting SentenceVertices
+     * Custom comparator for sorting TokenVertices
      */
     private static class SentenceVertexComparator implements Comparator<SentenceVertex> {
         @Override
@@ -324,6 +324,9 @@ public class TextRank {
         }
     }
 
+    /**
+     * A node containing a token and its information, such as score, POS, etc.
+     */
     public class TokenVertex {
 
         private String token;
