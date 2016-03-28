@@ -12,6 +12,15 @@ Built for Capital One's [MindSumo challenge](https://www.mindsumo.com/contests/5
   <img  src="https://github.com/J0Nreynolds/Articleate/blob/master/Screenshots/Screenshot_2016-03-27-18-23-19.png" width="210" />
 </p>
 
+* [Dependencies](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#dependencies)
+* [About the application](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#about-the-application)
+ * [TextRank implementation](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#textrank-implementation)
+ * [Article extraction methods](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#own-article-extraction-methods)
+ * [Cached summaries](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#cached-summaries)
+ * [Further research](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#researching-articles-further)
+ * [Intent filters for news sources](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#intent-filters-for-popular-news-sources)
+* [Results](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#results)
+
 ##Dependencies
 The application's functionality depends on [JSoup](http://jsoup.org/), [Apache OpenNLP](http://opennlp.apache.org/), and [JGraphT](http://jgrapht.org/).
 Additionally, the application depends on [AndroidSlidingUpPanel](https://github.com/umano/AndroidSlidingUpPanel) and [android-flowlayout](https://github.com/ApmeM/android-flowlayout) for Android UI elements. All of these dependencies can be obtained through Maven in Android Studio.
@@ -43,7 +52,7 @@ Before the TextRank algorithm is run on text, it has to be extracted from webpag
 After extracting the desired text from an article, the text is passed through my TextRank implementation, where keyword and sentence rankings are performed. Then, the top sentence, top 8 keywords, and author information of the article are displayed to the user.
 
 #####Benefits:
-Again, all processing is done in-app, and targeting general web-article patterns allows the article extraction methods to work on nearly all articles on the web. See the Results section for a listing of successfully tested news sources.
+Again, all processing is done in-app, and targeting general web-article patterns allows the article extraction methods to work on nearly all articles on the web. See the [Results section](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#results) for a listing of successfully tested news sources.
 
 ###Cached summaries
 Once summaries are successfully created, they are cached. Articleate will cache your 20 most-recent article summarizations, which are shown on the MainActivity of the app.
