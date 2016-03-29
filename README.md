@@ -2,13 +2,13 @@
 Built for Capital One's [MindSumo challenge](https://www.mindsumo.com/contests/565) and competitive entrance to Capital One's [annual SE Summit](https://www.youtube.com/watch?v=c5efHTl40dE). Articleate is an Android application that performs text analysis and extraction on internet news articles.
 
 <p align="center">
-  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-31-14.png" width="210" />
-  
+  <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-28-23-51-11.png" width="210" />
+
   <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-24-46.png" width="210" />
-  
+
   <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-27-17-24-53.png" width="210" />
-  
-  
+
+
   <img  src="https://github.com/J0Nreynolds/Articleate/blob/master/Screenshots/Screenshot_2016-03-27-18-23-19.png" width="210" />
 </p>
 ####Table of Contents
@@ -40,7 +40,7 @@ related articles
 Articleate is able to extract key sentences and words in
 articles through an NLP algorithm known as TextRank. TextRank is a graph-based
 algorithm derived from Larry Page’s and Sergey Brin’s PageRank algorithm,
-originally used in determining order of pages in Google searches. 
+originally used in determining order of pages in Google searches.
 
 To perform TextRank, Articleate depends on JGraphT and Apache OpenNLP. JGraphT is used to represent the various graphs used in text extraction, while OpenNLP provides a simple means of sentence separation and text tokenization. The original TextRank paper can be read [here](https://web.eecs.umich.edu/~mihalcea/papers/mihalcea.emnlp04.pdf), and my Java TextRank implementation for this project is available [here](https://github.com/J0Nreynolds/Articleate/blob/master/app/src/main/java/textrank/TextRank.java). In order to optimize the algorithm, stoplists are used to remove common English-language tokens, greatly reducing the number of vertices in keyword extraction and the number of similarities in sentence extraction.
 
@@ -48,7 +48,7 @@ To perform TextRank, Articleate depends on JGraphT and Apache OpenNLP. JGraphT i
 Using TextRank as a means of article summarization in-app requires no web API calls and runs very quickly.
 
 ###Own article extraction methods
-Before the TextRank algorithm is run on text, it has to be extracted from webpages first. In order to extract web page text, I used JSoup, an HTML parsing library. After looking at the general HTML structure and patterns on major news websites, I developed a series of methods for extracting author information and article text content without unneeded textual elements. 
+Before the TextRank algorithm is run on text, it has to be extracted from webpages first. In order to extract web page text, I used JSoup, an HTML parsing library. After looking at the general HTML structure and patterns on major news websites, I developed a series of methods for extracting author information and article text content without unneeded textual elements.
 
 After extracting the desired text from an article, the text is passed through my TextRank implementation, where keyword and sentence rankings are performed. Then, the top sentence, top 8 keywords, and author information of the article are displayed to the user.
 

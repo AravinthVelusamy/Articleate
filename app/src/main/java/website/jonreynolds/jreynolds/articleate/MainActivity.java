@@ -132,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 TextView tv = (TextView)convertView.findViewById(R.id.list_item_summary_textview);
                 tv.setText(getItem(position));
-                Log.v("item", getItem(position).toString());
                 return convertView;
             }
         };
