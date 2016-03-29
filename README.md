@@ -1,5 +1,5 @@
 # Articleate
-Built for Capital One's [MindSumo challenge](https://www.mindsumo.com/contests/565) and competitive entrance to Capital One's [annual SE Summit](https://www.youtube.com/watch?v=c5efHTl40dE). Articleate is an Android application that performs text analysis and extraction on internet news articles.
+Built for Capital One's [MindSumo challenge](https://www.mindsumo.com/contests/565) and competitive entrance to Capital One's [annual SE Summit](https://www.youtube.com/watch?v=c5efHTl40dE). Articleate is an Android application that performs text analysis and extraction on internet news articles. The .APK file is available under the name `articleate.apk` in the repository.
 
 <p align="center">
   <img  src="https://raw.githubusercontent.com/J0Nreynolds/Articleate/master/Screenshots/Screenshot_2016-03-28-23-51-11.png" width="210" />
