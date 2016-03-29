@@ -6,7 +6,7 @@
     android:hint="Hello World!"
     android:typeface="serif"
     android:textStyle="normal"
-    android:textSize="14dp"
+    android:textSize="14sp"
     android:textIsSelectable="false"
     android:theme="@style/AppTheme"
     android:allowUndo="false">

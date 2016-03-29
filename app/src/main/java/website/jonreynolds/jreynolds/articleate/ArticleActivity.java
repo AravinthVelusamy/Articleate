@@ -53,6 +53,7 @@ public class ArticleActivity extends AppCompatActivity {
     private String summary;
     private String[] summaries;
     private String author;
+    private String headline;
     private String[] keywords;
     private String selectedKeyword;
     private static TextRank tr;
@@ -80,13 +81,15 @@ public class ArticleActivity extends AppCompatActivity {
      * Run all processing on JSoup extracted elements
      */
     private void runAnalysis(){
-        createAuthorText();
         Element article = getArticleFromDocument();
         if(article!=null){
+            extractAuthor(article);
+            extractHeadline(article);
             summarizeArticle(article);
         }
         else{
             summary = "No article could be extracted.";
+            author = "";
         }
 
         progressBar.setVisibility(View.GONE);
@@ -234,8 +237,14 @@ public class ArticleActivity extends AppCompatActivity {
     /**
      * Find author text based on common class names for authors
      */
-    private void createAuthorText(){
-        Element authorContainer = document.getElementsByAttributeValueContaining("class", "byline").first();
+    private void extractAuthor(Element article){
+        Element authorContainer = article.getElementsByAttributeValueContaining("class", "byline").first();
+        if(authorContainer == null) {
+            authorContainer = article.getElementsByAttributeValueContaining("class", "author").first();
+        }
+        if(authorContainer == null) {
+            authorContainer = document.getElementsByAttributeValueContaining("class", "byline").first();
+        }
         if(authorContainer == null) {
             authorContainer = document.getElementsByAttributeValueContaining("class", "author").first();
         }
@@ -246,6 +255,31 @@ public class ArticleActivity extends AppCompatActivity {
         else {
             Log.v("Author Information", "Couldn't extract author data");
             author = "Couldn't extract author data.";
+        }
+    }
+
+
+    /**
+     * Find headline text based on common class names for headlines
+     */
+    private void extractHeadline(Element article){
+        Element headlineContainer = article.getElementsByAttributeValueContaining("class", "headline").first();
+        if(headlineContainer == null) {
+            headlineContainer = article.getElementsByAttributeValueContaining("class", "title").first();
+        }
+        if(headlineContainer == null) {
+            headlineContainer = document.getElementsByAttributeValueContaining("class", "headline").first();
+        }
+        if(headlineContainer == null) {
+            headlineContainer = document.getElementsByAttributeValueContaining("class", "title").first();
+        }
+        if(headlineContainer!=null) {
+            Log.v("Headline Information", headlineContainer.text());
+            headline = headlineContainer.text();
+        }
+        else {
+            Log.v("Headline Information", "Couldn't extract headline data");
+            headline = "Couldn't extract headline data";
         }
     }
 
@@ -291,7 +325,9 @@ public class ArticleActivity extends AppCompatActivity {
         File cachedSummaries= new File(getCacheDir(), "summaries.txt");
         //Open PrintWriter in append mode.
         PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(cachedSummaries, true)));
+        pw.println(headline);
         pw.println(summary);
+        pw.println(author);
         pw.close();
     }
 
