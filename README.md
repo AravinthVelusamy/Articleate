@@ -56,10 +56,10 @@ After extracting the desired text from an article, the text is passed through my
 Again, all processing is done in-app, and targeting general web-article patterns allows the article extraction methods to work on nearly all articles on the web. See the [Results section](https://github.com/J0Nreynolds/Articleate/blob/master/README.md#results) for a listing of successfully tested news sources.
 
 ###Cached summaries
-Once summaries are successfully created, they are cached. Articleate will cache your 20 most-recent article summarizations, which are shown on the MainActivity of the app.
+Once summaries are successfully created, they are cached. Articleate will cache your 20 most-recent article summarizations, which are shown on the MainActivity of the app. Besides the summary, the title, author, and url of the article is cached and available in the MainActivity.
 
 #####Benefits:
-Users can re-read past summarizations at any time (even if the application was closed), allowing them to continue researching a certain issue or to recall their earlier readings.
+Users can re-read past summarizations at any time (even if the application was closed), allowing them to continue researching a certain issue or to recall their earlier readings. If they want to re-read the full article, all they need to do is touch the summary, and the summarization view will open with the full article webpage for reading.
 
 ###Researching articles further
 Touching a keyword gives you multiple options for further research:
