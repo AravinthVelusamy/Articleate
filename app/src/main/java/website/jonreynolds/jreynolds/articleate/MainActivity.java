@@ -40,7 +40,7 @@ import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
     private final int MAX_NUM_SUMMARIES = 20;
-    private final int LINES_PER_SUMMARY = 3;
+    private final int LINES_PER_SUMMARY = 4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         lnr.close();
 
         //Create ArrayList to hold summaries
-        ArrayList<SpannableStringBuilder> summaries = new ArrayList<>();
+        ArrayList<String[]> summaries = new ArrayList<>();
 
         //Maintain cache to last MAX_NUM_SUMMARIES summaries and add those to ArrayList
         File tempFile = new File(getCacheDir(), "myTempFile.txt");
@@ -97,21 +97,14 @@ public class MainActivity extends AppCompatActivity {
         String currentLine;
         int currentLineNum = 1;
         int i = 0;
-        SpannableStringBuilder current = new SpannableStringBuilder();
+        String[] currentStringArray = new String[4];
         while ((currentLine = reader.readLine()) != null) {
             if(numLines - currentLineNum <= MAX_NUM_SUMMARIES*LINES_PER_SUMMARY){
                 writer.println(currentLine);
-                if(i%3==0) {
-                    current.append(currentLine + "\n");
-                    current.setSpan(new android.text.style.StyleSpan(Typeface.BOLD_ITALIC), 0, current.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                }
-                else if(i%3 == 1)
-                    current.append(currentLine + "\n");
-                if(i%3 == 2) {
-                    current.append(currentLine);
-                    current.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.ITALIC), current.length()-currentLine.length(), current.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    summaries.add(current);
-                    current= new SpannableStringBuilder();
+                currentStringArray[i%LINES_PER_SUMMARY] = currentLine;
+                if(i%LINES_PER_SUMMARY == LINES_PER_SUMMARY-1){
+                    summaries.add(currentStringArray);
+                    currentStringArray = new String[4];
                 }
                 i++;
             }
@@ -123,7 +116,9 @@ public class MainActivity extends AppCompatActivity {
 
         //Make newest lines first
         Collections.reverse(summaries);
-        ArrayAdapter<SpannableStringBuilder> summaryListViewAdapter = new ArrayAdapter<SpannableStringBuilder>(this, R.layout.list_item_summary, R.id.list_item_summary_textview, summaries){
+
+        //Populate the TextViews
+        ArrayAdapter<String[]> summaryListViewAdapter = new ArrayAdapter<String[]>(this, R.layout.list_item_summary, R.id.list_item_summary_textview, summaries){
             @Override
             public View getView (int position, View convertView, ViewGroup parent){
                 if(convertView == null) {
@@ -131,7 +126,37 @@ public class MainActivity extends AppCompatActivity {
                     convertView = vi.inflate(R.layout.list_item_summary, null);
                 }
                 TextView tv = (TextView)convertView.findViewById(R.id.list_item_summary_textview);
-                tv.setText(getItem(position));
+                String[] summaryLines = getItem(position);
+                //Build the inner text of the TextView
+                SpannableStringBuilder summaryItemText  = new SpannableStringBuilder();
+                for(int i = 0 ; i < summaryLines.length; i++){
+                    switch (i){
+                        case 0: {
+                            summaryItemText.append(summaryLines[i] + "\n");
+                            summaryItemText.setSpan(new android.text.style.StyleSpan(Typeface.BOLD_ITALIC), 0, summaryItemText.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        } break;
+
+                        case 1: {
+                            summaryItemText.append(summaryLines[i] + "\n");
+                        } break;
+
+                        case 2: {
+                            summaryItemText.append(summaryLines[i]);
+                            summaryItemText.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.ITALIC), summaryItemText.length() - summaryLines[i].length(), summaryItemText.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        } break;
+
+                    }
+                }
+                //Set the TextView to navigate back to the article on-click
+                final String url = summaryLines[LINES_PER_SUMMARY-1];
+                tv.setText(summaryItemText);
+                tv.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        startArticleIntent(url);
+                    }
+                });
                 return convertView;
             }
         };
@@ -147,9 +172,14 @@ public class MainActivity extends AppCompatActivity {
     public void handleButtonClick(View view){
         EditText urlInput = (EditText)findViewById(R.id.url_bar);
         String url = urlInput.getText().toString();
+        startArticleIntent(url);
+    }
+
+    private void startArticleIntent(String url){
         Intent articleIntent = new Intent(this, ArticleActivity.class);
         articleIntent.putExtra("url", url);
         startActivity(articleIntent);
+
     }
 
 }

@@ -51,11 +51,11 @@ public class ArticleActivity extends AppCompatActivity {
     FlowLayout keywordsContainer;
     private Document document;
     private String summary;
-    private String[] summaries;
     private String author;
     private String headline;
     private String[] keywords;
     private String selectedKeyword;
+    private String url;
     private static TextRank tr;
 
 
@@ -171,6 +171,7 @@ public class ArticleActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.VISIBLE);
                 setProgress(0);
                 FetchPageTask fetch = new FetchPageTask();
+                ArticleActivity.this.url = url;
                 fetch.execute(url);
             }
             @Override
@@ -328,6 +329,7 @@ public class ArticleActivity extends AppCompatActivity {
         pw.println(headline);
         pw.println(summary);
         pw.println(author);
+        pw.println(url);
         pw.close();
     }
 
